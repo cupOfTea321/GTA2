@@ -8,7 +8,7 @@ export class Player{
         this.x = x
         this.y = y
         // скорость персонажа
-        this.velocity = 3
+        this.velocity = 6
         this.radius = 15
         this.movementLimits = {
             minX: movementLimits.minX + this.radius,
