@@ -9,12 +9,15 @@ const context = canvas.getContext('2d')
 // рисунок на всю ширину экрана
 canvas.width = document.documentElement.clientWidth
 canvas.height = document.documentElement.clientHeight
-
+const wastedElement = document.querySelector('.wasted')
+const scoreElement = document.querySelector('#score')
 let player
+let score = 0
 // массив всех снарядов
 let projectiles = []
 let enemies = []
 let particles = []
+let spawnIntervalId, countIntervalId, animationId
 startGame()
 function startGame(){
     init()
@@ -50,14 +53,30 @@ function createProjectile(event){
 }
 
 function spawnEnemies(){
-    enemies.push(new Enemy(canvas.width, canvas.height, context, player))
+    let countOfSpawnEnemies = 1
+    countIntervalId = setInterval(() => countOfSpawnEnemies++, 30000)
+    spawnIntervalId = setInterval(() => spawnCountEnemies(countOfSpawnEnemies), 1000)
+    spawnCountEnemies(countOfSpawnEnemies)
+}
+function spawnCountEnemies(count){
+    for (let i = 0; i < count; i++){
+        enemies.push(new Enemy(canvas.width, canvas.height, context, player))
+    }
 }
 // цикл отрисовки анимации
 function animate(){
     // перерисовка на следующем кадре
-    requestAnimationFrame(animate)
+    animationId = requestAnimationFrame(animate)
     // очистка прошлой картинки персонажа
     context.clearRect(0, 0, canvas.width, canvas.height)
+    // проверка на окончание игры
+    const isGameOver = enemies.some(checkHittingPlayer)
+    if (isGameOver){
+        cancelAnimationFrame(animationId)
+        wastedElement.style.display = 'block'
+        clearInterval(spawnIntervalId)
+        clearInterval(countIntervalId)
+    }
     // удаление прозрачных частиц из массива
     particles = particles.filter(particle => particle.alpha > 0)
     // после выхода из экрана снаряд не отрисовывается
@@ -70,6 +89,7 @@ function animate(){
     enemies.forEach(enemy => checkHittingEnemy(enemy))
     // удаление подбитого врага
     enemies = enemies.filter(enemy => enemy.health > 0)
+
     // вызов отрисовки персонажа
     player.update()
     enemies.forEach(enemy => enemy.update())
@@ -79,7 +99,11 @@ function projectileInsideWindow(projectile){
         projectile.x - projectile.radius < canvas.width &&
         projectile.y - projectile.radius < canvas.height
 }
-
+// проверка на касание врагом
+function checkHittingPlayer(enemy){
+    const distance = distanceBetweenTwoPoints(player.x, player.y, enemy.x, enemy.y)
+    return distance - enemy.radius - player.radius < 0
+}
 function checkHittingEnemy(enemy){
     // ищим любой попавший снаряд во врага
     projectiles.some((projectile, index) => {
@@ -91,6 +115,7 @@ function checkHittingEnemy(enemy){
 
         // анимация смерти врага
         if (enemy.health < 1){
+            increaseScore()
             enemy.createExplosion(particles)
         }
         return true
@@ -98,4 +123,9 @@ function checkHittingEnemy(enemy){
 }
 function removeProjectilesByIndex(index){
     projectiles.splice(index, 1)
+}
+// увеличение очков за убийство врага
+function increaseScore(){
+    score += 250
+    scoreElement.innerHTML = score
 }

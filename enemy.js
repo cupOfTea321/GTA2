@@ -60,8 +60,8 @@ export class Enemy{
         this.draw()
         // высчитывается скорость врага
         this.velocity = {
-            x: cosBetweenTwoPoints(this.player.x, this.player.y, this.x, this.y) * 2,
-            y: sinBetweenTwoPoints(this.player.x, this.player.y, this.x, this.y) * 2,
+            x: cosBetweenTwoPoints(this.player.x, this.player.y, this.x, this.y) * 3,
+            y: sinBetweenTwoPoints(this.player.x, this.player.y, this.x, this.y) * 3,
         };
         this.x += this.velocity.x
         this.y += this.velocity.y
