@@ -1,3 +1,6 @@
+import {cosBetweenTwoPoints, sinBetweenTwoPoints} from "./utilities.js";
+import {Particle} from "./particle.js";
+
 export class Enemy{
     constructor(canvasWidth, canvasHeight, context, player) {
         this.context = context
@@ -12,17 +15,23 @@ export class Enemy{
             this.x = Math.random() * canvasWidth
             this.y = Math.random() < 0.5 ? 0 - this.radius : canvasHeight + this.radius
         }
+        const enemyType = Math.random() > 0.8 ? 2 : 1;
+        this.health = enemyType;
+
         this.image = new Image()
-        this.image.src = './img/enemy_1.png'
+        this.image.src = `./img/enemy_${enemyType}.png`
         this.imageWidth = 50
         this.imageHeight = 60
         this.imageTick = 0
     }
     drawImg(){
-        const imageTickLimit = 10
+        const imageTickLimit = 18
+        // смещение по спрайту
         const subX = this.imageTick > imageTickLimit ? this.imageWidth : 0
         this.imageTick++
         if (this.imageTick > imageTickLimit * 2) this.imageTick = 0
+
+        // отрисовка самой картинки
         this.context.drawImage(
             this.image,
             subX,
@@ -35,13 +44,37 @@ export class Enemy{
             this.imageHeight
         )
     }
+    // эффект перевернутой картинки
     draw(){
         this.context.save()
-        let angle = Math.atan2(this.y - this.player.y, this.x - this.player.x)
+        let angle = Math.atan2(this.player.y - this.y, this.player.x - this.x)
         this.context.translate(this.x, this.y)
-        this.context.rotate(angle, Math.PI/2)
+        this.context.rotate(angle + Math.PI/2)
         this.context.translate(-this.x, -this.y)
         this.drawImg()
         this.context.restore()
+    }
+
+    // отрисовка врага + передвижение
+    update(){
+        this.draw()
+        // высчитывается скорость врага
+        this.velocity = {
+            x: cosBetweenTwoPoints(this.player.x, this.player.y, this.x, this.y) * 2,
+            y: sinBetweenTwoPoints(this.player.x, this.player.y, this.x, this.y) * 2,
+        };
+        this.x += this.velocity.x
+        this.y += this.velocity.y
+    }
+
+    createExplosion(particles){
+        // создание 50 частиц взрыва
+        for (let i = 0; i < 50; i++){
+            particles.push(new Particle(
+                this.x,
+                this.y,
+                this.context,
+            ))
+        }
     }
 }
